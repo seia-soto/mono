@@ -10,8 +10,16 @@ export class Smaz {
     this.decompressor = new SmazDecompress(codebook);
   }
 
-  public compress(str: string | Uint8Array): Uint8Array {
+  public compress(str: string): Uint8Array {
     return this.compressor.compress(str);
+  }
+
+  public compressWithConversion(str: string | Uint8Array): Uint8Array {
+    return this.compressor.compressWithConversion(str);
+  }
+
+  public compressWithAccessAbstraction(str: string | Uint8Array): Uint8Array {
+    return this.compressor.compressWithAccessAbstraction(str);
   }
 
   public getCompressedSize(str: string | Uint8Array): number {
@@ -39,8 +47,16 @@ export function decompress(array: Uint8Array): string {
   return getDefaultSmaz().decompress(array);
 }
 
-export function compress(str: string | Uint8Array): Uint8Array {
+export function compress(str: string): Uint8Array {
   return getDefaultSmaz().compress(str);
+}
+
+export function compressWithConversion(str: string): Uint8Array {
+  return getDefaultSmaz().compressWithConversion(str);
+}
+
+export function compressWithAccessAbstraction(str: string): Uint8Array {
+  return getDefaultSmaz().compressWithAccessAbstraction(str);
 }
 
 export function getCompressedSize(str: string | Uint8Array): number {

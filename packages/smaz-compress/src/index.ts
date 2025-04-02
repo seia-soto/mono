@@ -74,7 +74,57 @@ export class SmazCompress {
     return bufferIndex;
   }
 
-  public compress(str: string | Uint8Array): Uint8Array {
+  public compress(str: string): Uint8Array {
+    if (str.length === 0) {
+      return EMPTY_UINT8_ARRAY;
+    }
+
+    let bufferIndex = 0;
+    let verbatimIndex = 0;
+    let inputIndex = 0;
+    const len = str.length;
+
+    while (inputIndex < str.length) {
+      let indexAfterMatch = -1;
+      let code = -1;
+      let root: Trie | undefined = this.trie;
+
+      for (let j = inputIndex; j < len; j += 1) {
+        root = root.chars.get(str.charCodeAt(j));
+        if (root === undefined) {
+          break;
+        }
+
+        if (root.code !== undefined) {
+          code = root.code;
+          indexAfterMatch = j + 1;
+        }
+      }
+
+      if (code === -1) {
+        this.verbatim[verbatimIndex++] = str.charCodeAt(inputIndex++);
+        if (verbatimIndex === 255) {
+          bufferIndex = this.flushVerbatim(verbatimIndex, bufferIndex);
+          verbatimIndex = 0;
+        }
+      } else {
+        if (verbatimIndex !== 0) {
+          bufferIndex = this.flushVerbatim(verbatimIndex, bufferIndex);
+          verbatimIndex = 0;
+        }
+        this.buffer[bufferIndex++] = code;
+        inputIndex = indexAfterMatch;
+      }
+    }
+
+    if (verbatimIndex !== 0) {
+      bufferIndex = this.flushVerbatim(verbatimIndex, bufferIndex);
+    }
+
+    return this.buffer.slice(0, bufferIndex);
+  }
+
+  public compressWithConversion(str: string | Uint8Array): Uint8Array {
     if (str.length === 0) {
       return EMPTY_UINT8_ARRAY;
     }
@@ -112,6 +162,57 @@ export class SmazCompress {
 
       if (code === -1) {
         this.verbatim[verbatimIndex++] = data[inputIndex++];
+        if (verbatimIndex === 255) {
+          bufferIndex = this.flushVerbatim(verbatimIndex, bufferIndex);
+          verbatimIndex = 0;
+        }
+      } else {
+        if (verbatimIndex !== 0) {
+          bufferIndex = this.flushVerbatim(verbatimIndex, bufferIndex);
+          verbatimIndex = 0;
+        }
+        this.buffer[bufferIndex++] = code;
+        inputIndex = indexAfterMatch;
+      }
+    }
+
+    if (verbatimIndex !== 0) {
+      bufferIndex = this.flushVerbatim(verbatimIndex, bufferIndex);
+    }
+
+    return this.buffer.slice(0, bufferIndex);
+  }
+
+  public compressWithAccessAbstraction(str: string | Uint8Array): Uint8Array {
+    if (str.length === 0) {
+      return EMPTY_UINT8_ARRAY;
+    }
+
+    const retrieve = typeof str === 'string' ? str.charCodeAt.bind(str) : str.at.bind(str) as (i: number) => number;
+
+    let bufferIndex = 0;
+    let verbatimIndex = 0;
+    let inputIndex = 0;
+
+    while (inputIndex < str.length) {
+      let indexAfterMatch = -1;
+      let code = -1;
+      let root: Trie | undefined = this.trie;
+
+      for (let j = inputIndex; j < str.length; j += 1) {
+        root = root.chars.get(retrieve(j));
+        if (root === undefined) {
+          break;
+        }
+
+        if (root.code !== undefined) {
+          code = root.code;
+          indexAfterMatch = j + 1;
+        }
+      }
+
+      if (code === -1) {
+        this.verbatim[verbatimIndex++] = retrieve(inputIndex++);
         if (verbatimIndex === 255) {
           bufferIndex = this.flushVerbatim(verbatimIndex, bufferIndex);
           verbatimIndex = 0;

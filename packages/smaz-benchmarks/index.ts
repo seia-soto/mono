@@ -119,6 +119,18 @@ function benchDecompress(
   );
 
   benchCompress(
+    `${chalk.bold('@remusao/smaz')}#${chalk.underline('compressWithConversion')}`,
+    strings,
+    (str) => smaz.compressWithConversion(str).length,
+  );
+
+  benchCompress(
+    `${chalk.bold('@remusao/smaz')}#${chalk.underline('compressWithAccessAbstraction')}`,
+    strings,
+    (str) => smaz.compressWithAccessAbstraction(str).length,
+  );
+
+  benchCompress(
     `${chalk.bold('shorter')}#${chalk.underline('compress')}`,
     strings,
     (str) => shorter.compress(str).length,
